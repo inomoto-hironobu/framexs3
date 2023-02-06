@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map xmlns="http://www.w3.org/2005/xpath-functions">
+	<map key="test">
+		<array key="array">
+			<string>v1</string>
+			<string>v2</string>
+		</array>
+		<string key="str">test</string>
+		<number key="num">1</number>
+	</map>
+</map>

@@ -1,0 +1,825 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<fo:root xmlns:fo="http://www.w3.org/1999/XSL/Format">
+       <fo:layout-master-set>
+              <fo:simple-page-master margin-top="5mm" 
+                                     margin-bottom="5mm" 
+                                     margin-right="5mm" 
+                                     margin-left="10mm" 
+                                     master-name="PageMaster" 
+                                     page-height="297mm" 
+                                     page-width="210mm">
+              <fo:region-body margin-top="8mm" 
+                              margin-right="8mm" 
+                              margin-bottom="8mm" 
+                              margin-left="8mm"/>
+              <fo:region-before border-after-style="solid" 
+                              border-width="thin" 
+                              extent="5mm" 
+                              display-align="after"/>
+              <fo:region-after border-before-style="solid" 
+                              border-width="thin" 
+                              extent="5mm" 
+                              display-align="before"/>
+              <fo:region-start reference-orientation="270" 
+                              extent="5mm"/>
+              <fo:region-end reference-orientation="90" 
+                              extent="5mm"/>
+              </fo:simple-page-master>
+
+       </fo:layout-master-set>
+	<fo:page-sequence master-name="cover">
+		
+	</fo:page-sequence>
+	<fo:page-sequence master-name="body">
+		<fo:block>
+                     はじめに
+ドキュメントをXML化する目的は、Webページを作成したり、電子的に配布するデータを作り出す、電子的なマニュアルを作成する、など、いろいろあります。しかし、どのような意図でXMLドキュメントを作成するにしても奇麗にレイアウトして「紙」に印刷することを欠かすことができません。
+
+しかし、ドキュメントをSGMLやXMLで作成した時、それを奇麗に組版して印刷するのは技術的に難しい課題です。SGMLの時代からドキュメントをSGML化することで、ワン・ソース・マルチユースが実現できると言われてきましたが、現実には紙に印刷することさえ簡単には実現できませんでした。
+
+SGML、XMLドキュメントを印刷する方法として、今までよく使われてきたのは次のような方法です。
+
+XMLをPerlなどのスクリプトでMicrosoftWordの外部ファイル形式であるRTFに変換する。RTFをWordなどのRTFを読み込むアプリケーションで読み込んでレイアウトを調整して印刷する。レイアウト調整済み文書はRTF形式になる。
+FrameMaker＋SGMLのスタイルを指定して、FrameMaker＋SGMLで読み込み、レイアウトを調整してから印刷する。この場合、レイアウト調整済み文書はFrameMakerの独自形式となる。
+他の対話式組版ソフトやDTPソフトの形式に変換し、組版ソフトやDTPソフトでレイアウト調整して印刷する。レイアウト調整済み文書は、組版ソフトやDTPソフトの形式となる。
+しかし、これらの方法には問題があります。一番大きな問題は、XMLコンテンツをアプリケーション独自の形式に変換してしまうことです。変換後のファイルに対してレイアウト調整を行うわけですが、レイアウト調整済み文書は元のXMLコンテンツとは切り離されたアプリケーション独自のものになります。もし、ソースのXMLコンテンツを変更したら、変換からレイアウトまでの操作をもう一度繰り返さなければなりません。
+
+ドキュメントのソースを作ってから、レイアウト指定と調整を行い印刷するまでの流れは一サイクルで済むことはむしろ珍しく、普通は、校正などでソース変更とレイアウト調整のプロセスを何サイクルも通ります。従って、XMLソースを修正する都度、アプリケーションに読み込んでレイアウト調整が必要になるのでは、余計に手間がかかり、折角XMLでコンテンツを作った意味が薄くなってしまいます。そうかといって、レイアウト調整するアプリケーション上で文書の内容を修正したのでは、XMLソースと最終印刷物の内容がずれてしまいます。
+
+こういったことを考えますと、コンテンツXML化の効果を上げるにはXMLコンテンツ作成、レイアウト調整、組版・印刷まで一連のフローを確立するのが理想的です。
+
+Extensible Stylesheet Language仕様は、Webの標準を定める団体であるWorld Wide Web Consortium (W3C)で、「XMLを奇麗にレイアウトして組版するための仕様」として、策定が進んでいるものです。この仕様の正式な略称はXSLですが、現在、XSLという言葉は大変混乱していますので、本稿ではXSL-FOと略記します(1)。
+
+現在、InternetExplorer5を使えばXMLを表示したり印刷したりすることができるようになっています。しかし、これは、実際は内部でHTMLに変換して表示しています。HTMLにはページの概念がなく、IE5のようなブラウザはパソコンの画面で表示することを主たる目的として設計されています。このため、ブラウザではページレイアウトを指定するのが難しくなります。画面で表示してみるならブラウザが良いですが、「紙」への印刷では物足りません。
+
+これに対して、XSL-FOにはページの概念がありますので、「紙」への印刷を前提とする多種類の機能を使用することができます。次は、その一例です。
+
+見栄えの良い表紙を作る。
+本文とは違う印刷書式で目次を作成する。目次にはページ番号つける。
+左ページ、右ページで印刷書式を変更する。
+本文にヘッダ、フッタ、サイドバーを設ける。
+ヘッダにページ番号を印刷する。
+索引を作成し、索引にページ番号を添える。
+脚注を付ける。
+段組の印刷書式を設定したページを作る。
+組版プロセス概観
+レイアウトしてページを作成する処理を組版処理といいますが、脚注などがありますと、組版処理を行うにはかなり高度なアルゴリズムが必要です。
+
+XSL-FOを使う組版プロセスは次の図のようになります。XML文書をいきなり組版するのではなく、第一段階で、XMLドキュメントをXSL-FOドキュメントに変換します。次に、第二段階で、XSL-FOドキュメントを組版処理します。
+
+
+第一段階で使うプログラムがXSLTプロセサです。XSLTプロセサが、XMLドキュメントをXSL-FOに変換するためのルールを記述したものがXSLTスタイルシートです。ソースのXMLドキュメントとXSLTスタイルシートをXSLTプロセサに入力するとXMLドキュメントがXSL-FOドキュメントに変換されます。
+
+このXSL-FOドキュメントは、レイアウトを指定した状態のもので、まだページにレイアウトされた状態ではありません。なお、XSL-FOドキュメントをXSLT以外の別の方法で作成しても構いません。
+
+第二段階は、XSL-FOドキュメントをXSL-FOプロセサ(組版エンジン)でページ組版します。XSL-FOプロセサは組版結果を用紙に印刷したり、PDFに出力したり、画面に表示したりします。
+
+次に上述の組版プロセスで出てきましたいろいろな用語について、順に概略を説明します。
+
+XMLドキュメント
+XMLドキュメントの構成単位は要素です。要素とは、開始タグと終了タグで内容を囲ったものでタグには要素名を付けます。XML文書の全体構造は、要素をツリー構造になるように配置したものです。要素のツリーは、通常、文書の論理的構造に従って構築します。
+
+次の例はXML文書の一部です。
+
+XML文書の一部(例)
+<![CDATA[
+<doc>
+       <head>
+              <title>
+              スタイルシート解説
+              </title>
+              <author>
+              アンテナハウス株式会社
+              </author>
+              <date>
+              2001年2月
+              </date>
+       </head>
+       <body>
+              <section>
+                     <title>
+                     スタイルシートとは
+                     </title>
+              ...(略)...
+              </section>
+              ...(略)...
+       </body>
+</doc>]]>
+
+この例の中で、docがルート要素(文書全体を囲むタグ）で、head要素、body要素はルート要素の子供、title、 author、dateなどの要素は、さらにその下位の要素になります。要素の名前は「要素型名」と言いますが、ユーザが自由につけることができます。正しい(wellformedな)XMLドキュメントは、ルート要素を最上位要素とするツリー構造で表すことができます。
+
+「ドキュメントをXML化するのはなんのためか？どんなメリットがあるのか？」という質問を良く聞きます。
+
+XMLでは上のようにドキュメントの内容をタグで囲ってツリーで表現することで、タグを使ってツリー構造を簡単に変換できるということが大きなメリットです。ツリーの枝の順序を入れ替えたり、枝や葉をコピーしたり、削除したりなどの操作が簡単にできます。
+
+ツリー構造を変えるということは、次の例のようにドキュメントの一部を複製したり、場所を変えたり、順番を入れ替えたりする操作に相当します。
+
+XMLの中の要素の順番を並び替える＝ドキュメントの内容の順序を並び替える
+二次元の配列になっていないものから二次元配列の表を自動的に生成する
+「title」など指定要素を選択してコピーする＝目次を自動的に作り出す
+「index」などの指定要素をコピーする＝索引を自動的に作り出す
+「note」要素を取り出して、ツリーに新しい枝（注の一覧など）を作る。ツリーの作り方次第で、注の置き場所は、どこにでも簡単に移動できます。
+バイナリ形式のワープロ・ドキュメントではこういった操作は簡単にはできません。「ツリー操作が簡単にできること」はドキュメントをXML化する大きなメリットです。
+
+XSLTとは？
+XSLTというのは仕様の名前です(1)。
+
+XSLTは、もともと、ソースXML文書をXSL-FO文書に変換するために設計された仕様です。これはXML文書のツリー構造を変換することにあたります。それでXSLTは、XMLからXSL-FOへの変換に限らず、XML文書をHTML文書に変換したり、それ以外のツリー構造の変換用として汎用に使われるようになっています。
+
+XSLTの仕様を実現するプログラムがXSLTプロセサです。XSLTプロセサにはソースXMLドキュメントのツリーを変換するためのルールを外部ファイルとして与えます。このルールを記述したファイルをXSLTスタイルシート(または、XSLスタイルシート)と言います。
+
+XSLTスタイルシートには入力XMLドキュメントの要素を出力XMLドキュメントの要素に変換するためのテンプレートを記述します。このテンプレートの作り方によって色々なXMLのツリー変換を行うことができます。
+
+XSLTプロセサ
+XSLTはW3Cの勧告になっており、勧告版のXSLT仕様を実装するXSLTプロセサは沢山あります。その多くは無償で配布されています。現時点で、一番、機能的に強力なXSLTプロセサは、Microsoftが配布しているMSXML3.DLLでしょう。これは、正式名称は「MSXMLパーサー　バージョン3.0」と言い、2000年11月1日から、MicrosoftのWebサイトからダウンロードによる配布が始まっています。まだ、Internet Explorer5.5には添付されていませんが、MSの開発者がメーリング・リストで発言しているところによりますと、Internet Explorer6には添付されるようです。
+
+MSXML3.DLLは、プログラムの部品(ライブラリー)です。Internet Explorerなどから使うか、または、DLLを動かすプログラムを作成しないと、単独のXSLTプロセサとしては使えません。
+
+そこで、コマンドラインから使用するためのユーティリティも、別途、Microsoftのサイトから入手することができます。
+
+MSXML3.DLL
+Microsoftが配布しているXMLプロセサで、XSLT変換機能を備えています。
+MSXSL.EXE
+MSXML3.DLLは、DLLですのでエンドユーザが直接使うことができません。MSXML3.DLLをインストールしたPCにMSXSL.EXEをインストールしますと、DOS窓からコマンドラインでXSLT変換ができます。
+XSLTスタイルシート作成法
+現在、XSLTスタイルシートの作成は、プログラマがエディタを使って行う状態で、簡単にスタイルシートを作成するツールはありません。米国にはXSLのメーリング・リストがあり、1日100件を越えるメールでXSLTの書き方等に関する議論がなされている状態で、XSLTスタイルシートに関する関心の高さがうかがえます。XSLTスタイルシートの作成は、現状では、トライアンドエラー状態です。しかし、XSLTスタイルシートの作成は、慣れれば比較的簡単にできます。今後、XMLの普及に伴ってXSLTスタイルシートが普及していくことは間違いないところです。
+
+XSL-FO用XSLTスタイルシート
+次に、XML文書を、XSL-FOに変換するXSLTスタイルシートの例を示します。
+
+XSL-FO用スタイルシートの例
+<![CDATA[ 
+<?xml version="1.0" encoding="UTF-8" ?>
+<xsl:stylesheet version="1.0" 
+                xmlns:fo="http://www.w3.org/1999/XSL/Format"
+                xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+       <xsl:output method="xml"
+                   version="1.0"
+                   indent="no" />
+
+       <xsl:param name="toc-make" select="true()"/>
+
+       <!-- Paper Size -->
+       <xsl:param name="paper-width" >
+              210mm
+       </xsl:param>
+       <xsl:param name="paper-height">
+              297mm
+       </xsl:param>
+       ...中略...
+       <!-- Content Transform-->
+       <xsl:template match="doc">
+              <fo:root xmlns:fo="http://www.w3.org/1999/XSL/Format">
+                    <fo:layout-master-set>
+                    <fo:simple-page-master margin-top="5mm" 
+                                           margin-bottom="5mm" 
+                                           margin-right="5mm" 
+                                           margin-left="10mm"  
+                                           master-name="PageMaster">
+       ...中略...
+                    </fo:simple-page-master>
+       ...中略...
+                    </fo:layout-master-set>
+       ...中略...
+              </fo:root>
+       </xsl:template>
+</xsl:stylesheet>]]>
+
+このXSLTスタイルシートの中で、xsl:という接頭子(ネームスペース接頭子)で始まる要素がXSLT仕様で決まっているルール記述用の要素です。また、fo:という接頭子で始まっている要素が、XSL-FOドキュメントに出力される要素です。
+
+XSL-FOに変換するためのXSLTスタイルシートを作成するには、XSLTのルールの書き方と、それに加えて、XSL-FOに関する知識が必要となります。XSL-FOではページや行間隔も細かく指定しますので、HTMLに変換するXSLTスタイルシートを作成するよりは時間がかかります。
+
+しかし、上の例のXSLTスタイルシートは、PureSmartDoc形式で記述されたXMLファイルをXSL-FOに変換するための汎用のXSLTスタイルシートとしても使うことができます。
+
+このように、あるDTDに従うXMLファイルについては、スタイルシートをひとつ作成すればXSL-FOドキュメントに変換できます。もしレイアウトを調整するにしても若干の調整で済みます。ひとつのスタイルシートを使い回すことで、効率をあげることができます。
+
+特に、印刷物ではレイアウト指定の良し悪しが、見易さ、読み易さに大きな影響を与えます。優れたスタイルシートを作るのは、プログラムの知識だけではなく、デザインの能力も必要となります。今後は、優れたスタイルシートの市場が生まれる可能性もあるでしょう。
+
+XSL-FOファイルの例
+XSL-FOファイルは、fo:rootをルート要素とするwellformedなXMLファイルです。次にXSL-FOファイルの先頭部分の例を示します。
+
+XSL-FOファイルの例
+<![CDATA[ 
+<?xml version="1.0" encoding="UTF-16"?>
+<fo:root xmlns:fo="http://www.w3.org/1999/XSL/Format">
+       <fo:layout-master-set>
+              <fo:simple-page-master margin-top="5mm" 
+                                     margin-bottom="5mm" 
+                                     margin-right="5mm" 
+                                     margin-left="10mm" 
+                                     master-name="PageMaster" 
+                                     page-height="297mm" 
+                                     page-width="210mm">
+              <fo:region-body margin-top="8mm" 
+                              margin-right="8mm" 
+                              margin-bottom="8mm" 
+                              margin-left="8mm"/>
+              <fo:region-before border-after-style="solid" 
+                              border-width="thin" 
+                              extent="5mm" 
+                              display-align="after"/>
+              <fo:region-after border-before-style="solid" 
+                              border-width="thin" 
+                              extent="5mm" 
+                              display-align="before"/>
+              <fo:region-start reference-orientation="270" 
+                              extent="5mm"/>
+              <fo:region-end reference-orientation="90" 
+                              extent="5mm"/>
+              </fo:simple-page-master>
+       ...中略...
+       </fo:layout-master-set>
+       ...中略...
+</fo:root>]]>
+
+世界のXSL-FOプロセサ
+XSL-FOファイルをページ組版する処理を担当する「組版エンジン」がXSL-FOプロセサです。現在、世界で公開されているXSL-FOプロセサには次のようなものがあります。
+
+名称	特徴
+Antenna House XSL FormatterV1.1	アンテナハウスのXSL-FO組版エンジンとユーザ・インターフェイス(GUI)。組版エンジンは、日本語も英語も関係なく使うことができます。GUIは、日本語版(V1.1J)と英語版(V0.1、V1.1Eは準備中)があります。コマンドライン・インターフェイス、COMサーバ・インターフェイスもあります。
+FOP	Webサーバの開発で有名なApacheが取り組んでいるJAVA版XSL-FO組版エンジン。XSL-FOからPDFを出力する。2001年1月時点で、0.16版が配布されています。オリジナルでは日本語を使うことはできないが、日本語を使うパッチが公開されています。
+XEP	米国のRenderXというベンチャー企業のJAVA版XSL-FO組版エンジン。やはり、FOからPDFを出力する。日本語は使えません。
+PassiveTeX	FOを処理するTeXのマクロライブラリー（組版エンジンはTeXを使用）。
+UFO	Unicorn社のFOをTeXのマクロに変換する開発ツール（組版エンジンはTeXを使用）。
+組版結果の例
+本解説書は、XMLドキュメントとして記述して、XSL-FOに変換し、Antenna House XSL Formatterで組版したものです。ブラウザとは違って、ページ番号やヘッダの設定が行われて、印刷物としての体裁になっていることを確認していただけることでしょう。
+
+XSL-FO仕様の概要
+現状
+XSL-FO仕様は、2000年11月21日Candidate Recommendation になりました。Candidate Recommendation は仕様として安定した状態となり、XSL-FOプロセサを実装してください、という段階です。今後、Proposed Recommendation次いでRecommendationと進むことになっています。
+
+XSL-FOの仕様書は、エンドユーザ向けではなく開発者向けに書かれています。最初に、XSL-FOプロセサが担当するページ組版プロセスの概念を説明し、さらにXSL-FOプロセサが準拠するレイアウト・モデルを規定しています。
+
+さらに、XSL-FOドキュメントの要素であるFormatting Objects（以下、FOと言います）を規定します。FOとは、段落、リスト、表などの組版の対象になるもののことです。FOには、ページマスターの記述方法やマージンや本文領域の設定方法等ページネーション用のもの、段落やヘッドラインなどブロック・レベルのもの、行中に配置されるインライン・レベルのものなど56種類があります。
+
+ページの大きさやエリアの広さ、文字のフォント名やフォントのサイズなどはFOのプロパティで表します。プロパティは246種類あり、中にはCSS2の仕様からコピーされたものが多くあります。FOのレイアウト仕様はCSS2を強く意識して設計されています。
+
+XSL-FOの仕様 Version 1ではまだ高度なページレイアウトは困難ですが、操作説明書、報告書などのレベルであれば充分実用に耐えると考えています。
+
+組版プロセス
+組版というのは、XSL-FOドキュメントを読者の目に見える形式(出力形式)にすることです。XSL-FOの仕様書では、数段階を踏んで組版するプロセスを解説していますが、組版ソフトは必ずしもXSL-FOの仕様書どおりのステップを踏む必要はなく、出力形式が仕様書に書かれた制約に従っていれば良いということになっています。
+
+AntennaHouse XSL Formatterは、XSL-FO仕様のプロセスをできるだけ忠実に実装しており、Formatterの組版オプションを設定すれば、FOファイル、リファインされたFOファイル、エリア・ツリーをファイルとして出力できます。
+
+以下ではXSL-FOの仕様について理解を深めるため、仕様書に記述されている組版プロセスについて簡単に説明します。
+
+エリア・モデル
+XSL-FOの仕様の組版モデルはエリア・モデルといいます。XSL-FOのエリア・モデルは、CSS2のボックス・モデルにほぼ対応しています。CSS2のボックスはXSL-FOのエリアに相当し、CSS2の仕様で現れる要素はXSL-FOではFormatting Objectに相当します。
+
+XSL-FOドキュメントのFOは、出力媒体の領域と対応づけられている訳ではありません。エリアが出力媒体上の四角い領域に対応付けられます。
+
+XFL-FOプロセサは、FOからエリアを作り出すことで、XSL-FOドキュメント・ツリーをエリア・ツリーに変換します。エリア・ツリーはドキュメントの中の文字、図形やイメージを配置するための位置情報、間隔空けの情報やその他組版のために必要な情報を含む順序づけられたツリーです。
+
+エリアはブロック・エリアとインライン・エリア(行内エリア)の２種類に分類できます。ブロック・エリアのひとつにライン・エリア(行エリア)がありますが、ライン・エリアはその子供がすべてインライン・エリアになります。また、インライン・エリアのひとつにグリフ・エリアがありますが、グリフ・エリアは子供をもたず、内容文字のグリフであるという末端のエリアになります。
+
+エリア・ツリーと出力媒体の上の領域との対応関係は次の図のようになります。「Ｐ」がページ、「Ａ、Ｂ、Ｃ」はブロック・エリア、「ＸＹ」がライン・エリア、「あ、い、う」がインライン・エリアに相当します。
+
+
+リファレンス・オリエンテーション
+ページ全体については用紙の上がtop、下がbottom、左がleft、右がrightとなります。これは絶対方向です。ページの内部のエリアの中には座標系を設定できる参照エリアがあります。参照エリアの座標系は、その参照エリアを設定するFOのreference-orientationプロパティを設定することで、絶対方向を変更することができます。reference-orientationの値は初期値は0です。例えば90を指定しますと、指定したエリアの参照エリアは、その親の参照エリアの方向に対して反時計廻りに90度回転します。
+
+例えば、Ｂのreference-orientationプロパティを270に設定しますと次のように、Ｂの領域のtopはＰのtopに対して270度回転します。
+
+
+参照エリアを生成できるFOは次のものです。
+
+fo:simple-page-master
+fo:region-body
+fo:region-before
+fo:region-after
+fo:region-start
+fo:region-end
+fo:table
+fo:block-container
+fo:inline-container
+ライティング・モード
+エリアの中に、その子供のブロックを配置するときブロックの進行方向は、行の進行方向に相当します。また、インライン・エリアにその子供のエリアを配置するときその子供エリアの進行方向は、テキストの文字を進める方向に相当します。これをライティング・モードと言います。ライティング・モードの初期値は行の進行方向は上から下で文字の進行方向は左から右です。参照エリアを設定できるFOに対してwriting-modeプロパティを設定することで、ライティング・モードを変更することができます。
+
+writing-modeプロパティの値は次のものがあります。
+
+lr-tb(初期値)
+インラインのエリア、テキストの文字は左から右に進み、行とブロックは上から下に進む。
+rl-tb
+インラインのエリア、テキストの文字は右から左に進み、行とブロックは上から下に進む。アラビア語、ヘブライ語で使われる。
+tb-rl
+インラインのエリア、テキストの文字は上から下に進み、行とブロックは右から左に進む。日本語、中国語の縦書きで使われる。
+次の図は、Ｂのwriting-modeプロパティをtb-rlに設定し、Ｂブロックを縦書きとした例です。reference-orientationは0です。
+
+
+ブロックとインラインの進行方向
+エリアの属性と属性値はトレイトと言います。トレイトはエリアをレンダリングしたりあるいはエリアの組版の制約を規定するのに使われます。トレイトにはFOのプロパティと直接対応しているものもありますし、間接的に導き出されるものもあります。
+
+FOからエリアが作られる際にエリアのトレイトが決まります。例えばFOのreference-orientationとwriting-modeによって、参照エリアのブロックとインラインのエリアの進行方向が決定されます。これは、エリアのblock-progression-directionとinline-progression-directionというトレイトになります。
+
+エリアの中にさらに他のエリアやテキストを配置する領域は内容領域です。内容領域の周囲にパディング領域、ボーダー領域をもち、それぞれの周辺が内容境界、パディング境界、ボーダー境界となります。周囲にスペース(余白)を持つこともあります。これらの領域の配置はエリアのblock-progression-directionとinline-progression-directionによって決まります。
+
+ブロックの進行方向の前がbefore、後ろがafterになります。インラインの進行方向の前がstart、後ろがendです。
+
+
+KeepとBreak
+ページ参照エリア(ページ・マージンの内側＝region-bodyのマージンを含む領域)、カラム・エリア(段組の段領域)、ライン・エリアの3種類のエリアをコンテキスト・エリアと言い、コンテキスト・エリア内でKeepとBreak条件を設定できます。
+
+Breakにはbreak-before、break-afterの２つの条件があります。それぞれFOのbreak-before、break-afterプロパティに、page、even-page、odd-page、column、autoを指定することで設定されます。例えばFOのbreak-beforeをpageに設定すれば、そのFOから生成される最初のエリアは、常にページ参照エリアの中で先頭のエリアになります。同様に例えばFOのbreak-afterをpageに設定すれば、そのFOの生成する次のエリアが、ページ参照エリア内に存在しないか、次のエリアはページ参照エリアの先頭になります。autoにするとなにもBreak条件が設定されません。
+
+Keepにはkeep-with-previous、keep-with-next、keep-togetherの３つの条件があります。それぞれ、FOのkeep-with-previous、keep-with-next、keep-togetherのwithin-page、within-column、within-lineコンポーネントに強度を示す値を設定するかalwaysとします。数字が大きいほど強くalwaysは最強の条件となります。autoにすればKeep条件はなにも設定されません。
+
+エリア・ツリーは、すべてのBreak条件を満たすように設定されます。Keep条件の方は、Break条件が満たされないか、より強いKeep条件は失敗するような範囲で満たされます。
+
+FOのプロパティからエリアのトレイトへ
+FOのプロパティでは、レイアウト指定のパラメータを設定します。プロパティの値は、簡略記述したり、相対値や計算値で指定、あるいは、省略することもできます。このため組版エンジンは、まずプロパティ・リファインメントという処理でパラメータをエリアのトレイトに計算します。リファインメントの処理は次の２つのステップを踏んで行います。
+
+第一ステップ
+ショートハンド・プロパティ（簡略表記法）を個別のプロパティに展開します。継承、初期値で与えられた属性値をFOに付与し、属性値を計算式で指定している場合にはそれを計算、相対的な数値を絶対値に換算、二つ以上の属性から複合属性を作り出す、などの処理を行ってプロパティの値を確定します。
+第二ステップ
+プロパティをトレイトに変換します。
+ショートハンド・プロパティ
+XSL-FOでは、２種類のショートハンド・プロパティを使えます。borderのようにCSSから直接もってきたものとpage-break-insideのようにCSSのプロパティを分解したり結合したりしたものです。両方とも同じように処理されます。ショートハンドは親から継承されず、展開した個々のプロパティが継承されます。
+
+CSSでは、関係するショートハンドと個々の関係するプロパティの処理順位をユーザが指定しますが、XMLの属性には優先順位がないのでXSL-FOでは優先順位を定義しています。原則はより詳細な指定の方が優先度が高くなります。個々のプロパティはショートハンドよりも優先順位が高く、例えば、borderよりborder-topの方がより詳しく、さらにborder-top-colorの方がより詳しくなります。このような優先順位を考慮して、ショートハンドを展開します。
+
+数値の表現
+数値には、絶対数値と相対数値があります。
+
+絶対数値は数字と絶対単位からなります。
+相対数値は％、または相対長があります。相対長は数字と相対単位からなります。
+数値の指定においては、+(和)、-(差)、*(積)、div(割算)、mod(残余)計算を使えます。
+
+カラーは、RGB(red, green, blue)とICC(International Color Consortium)の指定ができます。
+
+絶対単位:cm、mm、in（2.54cm）、pt（1/72in）、pc（12pt）、px（通常の距離で見られる印刷、ディスプレイ、ハンドヘルド機器では0.28mm(約1/90インチ)が望ましいが、1/92インチまたは1/72インチのような値にしても良い。）
+
+相対単位：em（現在のfont-size プロパティの値を単位とします。1emは現在のfont-sizeと同じです。）
+
+ページネーションの基本
+XSL-FOドキュメントの構成
+XSL-FOのツリーの概要は次の図のようになります。ルート・ノードはfo:rootですが、その子供として1つのfo:layout-master-set、fo:declarations(オプション)、一つ又はそれ以上のfo:page-sequenceが来ます。
+
+
+fo:layout-master-setは内容を割り付けるレイアウト用紙とその並び、すなわちレイアウトマスターを必要数だけ規定します。
+
+fo:declarationsは、オプションでカラー・プロフィールなどのリソースを記述します。
+
+fo:page-sequance(ページシーケンス)には、ページに流し込む内容を子供として配置します。
+
+XSL-FOプロセサは、fo:page-sequenceの内容を、対応する名前のレイアウトマスターで規定されるレイアウト用紙に流し込んで行ってページを生成します。ページシーケンスを、どのレイアウトマスターを使って生成するかはfo:page-sequenceの属性master-nameの値に、レイアウトマスターの名前を設定することで指定します。
+
+次の例は、表紙用(cover)と本文用(body)という２種類のレイアウトマスターを作成し、表紙と本文の２つのページシーケンスを２つの用紙に生成するものです。
+
+XSL-FOドキュメントの構成
+<![CDATA[ 
+<fo:root>
+	<fo:layout-master-set>
+		<fo:simple-pagemaster master-name="cover">
+		 ......................
+		 ......................
+		</fo:simple-pagemaster>
+		<fo:simple-pagemaster master-name="body">
+		</fo:simple-pagemaster>
+		 ......................
+		 ......................
+	</fo:layout-master-set>
+	<fo:page-sequence master-name="cover">
+		 ......................
+		 ......................
+		 ......................
+	</fo:page-sequence>
+	<fo:page-sequence master-name="body">
+		 ......................
+		 ......................
+		 ......................
+	</fo:page-sequence>
+</fo:root>]]>
+レイアウトマスターセット
+レイアウトマスターには、fo:simple-page-masterとfo:page-sequence-masterの2種類に分類されます。いづれもレイアウトマスターセットの子供として定義します。
+
+レイアウトマスターの基本は、1ページの大きさ、本文領域、ヘッダ、フッタ、サイドバー(左右）を規定するfo:simple-page-master(ページマスター)です。
+
+レイアウトマスターのもうひとつの種類は、ページの並び順を規定するfo:page-sequence-masterです。fo:page-sequence-masterは、ひとつのページマスターからなるfo:single-page-master-referenceとページマスターの繰り返しを規定するfo:repeatable-page-master-reference、fo:repeatable-page-master-alternativesがあります。fo:repeatable-page-master-referenceは、ひとつのページマスターの繰り返しを規定し、fo:repeatable-page-master-alternativesはページマスターの組み合せの繰り返しを規定します。
+
+fo:repeatable-page-master-alternativesでは、偶数ページと奇数ページでページマスターを切り替えたり、最初のページ、最後のページ、ブランク・ページでページマスターを切り替えるなどができます。また、maximum-repeatsプロパティで最大の繰り返し回数を設定できます。
+
+それぞれのレイアウトマスターにはmaster-name属性の値にユニークな名前を設定します。
+
+ページマスター
+ページマスターはレイアウト用紙を定義するもので、ページマスターが一回使われる毎に一枚の用紙を生成します。例えば、fo:repeatable-page-master-referenceからfo:simple-page-masterを参照している場合、fo:page-sequenceの中からページマスターが呼ばれる毎に１ページを生成します。
+
+XSL-FO仕様のVersion1では、ページマスターにはfo:simple-page-masterしかありません。一つのXSL-FOドキュメントでいろいろな用紙を使う場合は、fo:simple-page-masterを沢山定義することができますが、master-nameプロパティにユニークな名前を付けて区別します。
+
+fo:simple-page-masterにはその子要素として、fo:region-body、fo-region-before、fo:region-after、fo-region-start、fo-region-endの５つの領域を指定します。次にひとつの例を示します。
+
+ページマスター
+<![CDATA[ 
+<fo:layout-master-set>
+        <fo:simple-page-master margin-top="5mm" 
+                               margin-bottom="5mm" 
+                               margin-right="5mm" 
+                               margin-left="10mm" 
+                               master-name="PageMaster" 
+                               page-height="297mm" 
+                               page-width="210mm">
+                <fo:region-body   margin-top="8mm" 
+                                  margin-right="8mm" 
+                                  margin-bottom="8mm" 
+                                  margin-left="8mm"/>
+                <fo:region-before border-after-style="solid" 
+                                  border-width="thin" 
+                                  extent="5mm" 
+                                  display-align="after"/>
+                <fo:region-after  border-before-style="solid"
+                                  border-width="thin" extent="5mm" 
+                                  display-align="before"/>
+                <fo:region-start  reference-orientation="270" 
+                                  extent="5mm"/>
+                <fo:region-end    reference-orientation="90"
+                                  extent="5mm"/>
+        </fo:simple-page-master>
+        <fo:simple-page-master master-name="PageMaster-Cover">
+                <fo:region-body  margin-top="8mm"
+                                 margin-right="8mm"
+                                 margin-bottom="8mm"
+                                 margin-left="8mm"/>
+        </fo:simple-page-master>
+</fo:layout-master-set>]]>
+上の例では次のようなページを設定しています。
+
+ページマスターの名前は、PageMasterとする
+全体の用紙サイズはA4縦とする
+本文にはページの上に文書タイトル，ページの下にページ番号を表示するエリアを確保する
+本文以外はページ番号などは表示しない
+通常の横書モードでは、fo:region-beforeがヘッダ、fo:region-afterがフッタ、fo:region-startが左サイドバー、fo:region-endが右サイドバーに相当します。
+
+ページの中の領域の幾何的な配置は次の図のようになります。ページのサイズはpage-widthとpage-heightで指定します。ページには上下、左右にmargin-top、margin-bottom、margin-left、margin-rightが取られます。その内側に、region-bodyのマージンを取ります。region-before、region-after、region-start、region-endはページマージンの内側に接して、region-bodyのマージン領域に配置されます。
+
+
+各regionには名前を指定する手間を省くため既定値で次の名前が決まっています。region-bodyの名前はxsl-region-body、region-beforeはxsl-region-before、region-afterはxsl-region-after、region-startはxsl-region-start、region-endはxsl-region-endとなります。
+
+ページシーケンス
+fo:page-sequenceはフローと呼ばれ、レイアウトマスターの５つの領域に配置するコンテンツを指定します。フローには静的なものfo:static-contentとfo:flowがあります。fo:static-contentは、通常はヘッダやフッタの領域に配置され、すべてのページに繰り返されます。fo:flowは、通常は本文(fo:region-body)に配置されるテキストを内容として持ちます。
+
+次は、ヘッダに「Extensible Stylesheet Language(XSL-FO)解説」という固定文字列、フッタにページ番号(fo:page-number)を配置する例です。
+
+ページシーケンス
+<![CDATA[ 
+<fo:page-sequence master-name="PageMaster">
+       <fo:static-content flow-name="xsl-region-before">
+                <fo:block text-align="center" font-size="small">
+                Extensible Stylesheet Language(XSL-FO)解説
+                </fo:block>
+       </fo:static-content>
+       <fo:static-content flow-name="xsl-region-after">
+                <fo:block text-align="center" font-size="small">
+                - <fo:page-number/> -
+                </fo:block>
+       </fo:static-content>
+       <fo:static-content flow-name="xsl-region-start">
+                <fo:block text-align="center" font-size="small"/>
+       </fo:static-content>
+       <fo:static-content flow-name="xsl-region-end">
+                <fo:block text-align="center" font-size="small"/>
+       </fo:static-content>
+       <fo:flow flow-name="xsl-region-body">
+                -----本文に配置する内容(省略)----
+       </fo:flow>
+</fo:page-sequence>]]>
+XSL-FOプロセサはfo:page-sequenceを処理する際、fo:page-sequenceのmaster-nameプロパティで指定しているページマスターまたはfo:page-sequence-masterを参照してページを作り出します。
+
+ひとつひとつのフローには、flow-nameプロパティで名前を設定します。ページマスターの中の領域とフローの対応関係をflow-mapによって決定します。XSL-FO仕様のVersion1では、flow-mapは暗黙の前提となっています。
+
+ブロックレベル要素
+ブロックレベルのFOには、fo:blockとfo:block-containerがあります。
+
+ブロック要素
+XSL-FOでは、本文テキストには見出し要素、段落要素などの区別がなく、テキストはすべてfo:blockの内容となります。フォントの種類や文字の大きさなどはfo:blockのプロパティとして指定します。
+
+次の例は、見出のfo:blockです。フォントサイズを14ポイントに設定し、常に本文と同一の頁、カラムに配置されるようにkeep-with-next属性を設定しています。
+
+fo:block
+<![CDATA[ 
+<fo:block 
+       font-size="14pt" 
+       space-before="0.5em" space-before.precedence="1" 
+       space-after="0.5em" 
+       keep-with-next.within-page=" always"
+       keep-with-next.within-column="always" 
+       start-indent="10mm"end-indent="10mm" 
+       id="IDwfmY1">
+        --見出しのブロック要素--
+</fo:block>]]>
+ブロックコンテナ
+fo:block-containerは、横書文書の中に部分縦書を挿入するなど、本文と異なるライティング・モードのエリアを組み込むのに一般的に使います。
+
+次は、fo:block-containerを使って本文に部分縦書を埋め込む方法の例です。
+
+fo:block-containerによる部分縦書
+<![CDATA[ 
+<fo:block-container 
+       writing-mode="tb-rl" 
+       padding-before="3pt"padding-after="3pt" 
+       padding-start="3pt"padding-end="3pt" 
+       width="168mm"height="60mm">
+              <fo:block text-indent="1em"
+              space-before="0.6em"space-after="0.6em"
+              start-indent="10mm"end-indent="10mm" 
+              text-align="justify">
+               --本文テキスト(略)--
+              </fo:block>
+</fo:block-container>]]>
+
+リスト
+XSL-FOでは、箇条書をfo:list-blockによって作成します。各箇条は、fo:list-itemになり、list-itemの中にfo-list-item-label(リストのマークを表示する部分)とlist-item-body(リストのコンテンツを表示する部分)を配置します。
+
+
+注意すべき点が二つあります。
+
+XSL-FOではリストのラベル項目を明示的に指定する必要があります。したがって箇条書きであれば箇条書き項目の先頭の記号を、番号付きリストであればxsl:numberで明示的に番号を振らなければなりません。
+デフォルトスタイルシートが存在しないので，list-item-labelの指定位置やlist-item-bodyの開始位置を明示的に指定しなければなりません。
+XSL-FOのリスト
+<![CDATA[ 
+<fo:list-block>
+    <fo:list-item>
+        <fo:list-item-label start-indent="inherit+ 5mm" 
+                               end-indent="label-end()">
+             <fo:block>&#x02022;</fo:block>
+        </fo:list-item-label>
+        <fo:list-item-body start-indent="body-start()">
+             <fo:block>...................................</fo:block>
+        </fo:list-item-body>
+    </fo:list-item>
+    <fo:list-item>
+        <fo:list-item-label start-indent="inherit+5mm" 
+                               end-indent="label-end()">
+            <fo:block>&#x02022;</fo:block>
+        </fo:list-item-label>
+        <fo:list-item-body start-indent="body-start()">
+            <fo:block>...................................</fo:block>
+        </fo:list-item-body>
+    </fo:list-item>
+</fo:list-block>]]>
+表
+XSL-FOの表は、次のような構造をしています。
+
+fo:table-and-caption
+表と表のキャプションを一緒に組版するとき使う
+fo:table
+表形式になっている部分を組版するのに使う。ひとつの表は、ヘッダとフッタとボディから構成する。ヘッダとフッタはオプション。Breakされたときヘッダとフッタを繰り返すかどうかをプロパティで指定する
+
+XSL-FOの表
+<![CDATA[ 
+<fo:table-and-caption>
+<fo:table>
+<fo:table-header>
+    <fo:table-row>
+        <fo:table-cell>
+        <fo:block>........</fo:block>
+        </fo:table-cell>
+    </fo:table-row>
+    <fo:table-row>
+        <fo:table-cell>
+        <fo:block>........</fo:block>
+        </fo:table-cell>
+    </fo:table-row>
+</fo:table-header>
+<fo:table-body>
+    <fo:table-row>
+        <fo:table-cell>
+        <fo:block>........</fo:block>
+        </fo:table-cell>
+    </fo:table-row>
+    <fo:table-row>
+        <fo:table-cell>
+        <fo:block>........</fo:block>
+        </fo:table-cell>
+    </fo:table-row>
+</fo:table-body>
+</fo:table>
+</fo:table-and-caption>]]>
+カラムの幅の設定
+fo:tableの子供要素のfo:table-columnはオプションですが、同じカラムとスパンを有するセルの特性を指定するとき使います。なかでも、一番重要なのは表のカラム幅の設定です。これは、fo:table-columnのcolumn-widthプロパティで指定します。
+
+カラム幅の設定
+<![CDATA[ 
+<fo:table-column column-number="1" />
+<fo:table-column column-number="2" column-width="24pt" />
+<fo:table-column column-number="3" column-width="6em" />
+<fo:table-column column-number="4" 
+	column-width="proportional-column-width(4)" />
+<fo:table-column column-number="5" 
+	column-width="proportional-column-width(2)" />]]>
+上の例のカラム幅は次のようになります。
+
+
+表のセルの属性
+表のセルには、セル単位で次のような修飾ができます。さらに、枠線や間隔については、上下左右の4辺に対して個別に設定することができます。
+
+セル単位で枠線を設定します。
+セル単位でバックグラウンド・カラーを設定します。
+セルの枠線とテキスト文字列との間の間隔(padding)を設定できます。
+表のセルの属性設定
+<![CDATA[ 
+<fo:table-and-caption border-style="solid">
+<fo:table border-collapse="separate" border-separation.block-progression-direction="2pt" border-separation.inline-progression-direction="2pt">
+<fo:table-body>
+<fo:table-row border-style="dotted" border-width="thin">
+<fo:table-cell  border-style="solid" border-width="thin">
+<fo:block>1</fo:block>
+</fo:table-cell>
+<fo:table-cell  border-style="dotted" border-width="thin">
+<fo:block>2</fo:block>
+</fo:table-cell>
+<fo:table-cell  border-style="dashed" border-width="thin">
+<fo:block>3</fo:block>
+</fo:table-cell>
+<fo:table-cell  border-style="inset" border-width="thin">
+<fo:block>4</fo:block>
+</fo:table-cell>
+<fo:table-cell border-style="outset" border-width="thin">
+<fo:block>5</fo:block>
+</fo:table-cell>
+</fo:table-row>
+<fo:table-row>
+<fo:table-cell background-color="red">
+<fo:block>1-1</fo:block>
+</fo:table-cell>
+<fo:table-cell background-color="blue">
+<fo:block>1-2</fo:block>
+</fo:table-cell>
+<fo:table-cell background-color="green">
+<fo:block>1-3</fo:block>
+</fo:table-cell>
+<fo:table-cell background-color="yellow">
+<fo:block>1-4</fo:block>
+</fo:table-cell>
+<fo:table-cell background-color="blue">
+<fo:block>1-5</fo:block>
+</fo:table-cell>
+</fo:table-row>
+<fo:table-row >
+<fo:table-cell background-color="pink" border-style="solid" border-width="thin" padding="5pt">
+<fo:block border-style="solid" border-width="thin" background-color="gray" >2-1</fo:block>
+</fo:table-cell>
+<fo:table-cell background-color="pink" border-style="solid" border-width="thin" padding="5mm">
+<fo:block border-style="solid" border-width="thin" background-color="gray">2-2</fo:block>
+</fo:table-cell>
+<fo:table-cell background-color="pink" border-style="solid" border-width="thin" padding="3em">
+<fo:block border-style="solid" border-width="thin" background-color="gray">2-3</fo:block>
+</fo:table-cell>
+<fo:table-cell background-color="pink" border-style="solid" border-width="thin" padding="1cm">
+<fo:block border-style="solid" border-width="thin" background-color="gray">2-4</fo:block>
+</fo:table-cell>
+<fo:table-cell background-color="pink" border-style="solid" border-width="thin">
+<fo:block border-style="solid" border-width="thin" background-color="gray">2-5</fo:block>
+</fo:table-cell>
+</fo:table-row>
+</fo:table-body>
+</fo:table>
+</fo:table-and-caption>]]>
+
+インラインのFO
+文字修飾
+イタリック、ボールドなどの文字修飾、あるいは、上付き、下付きなどは、インラインのFOを使って指定します。また、画像もインライン要素であるfo:externat-graphicを使って行中に埋め込むことができます。
+
+インラインのFOによる文字の修飾
+<![CDATA[ 
+<fo:inline font-style="italic">
+       イタリック
+</fo:inline>
+<fo:inline font-weight="bold">
+       ボールド
+</fo:inline>
+<fo:inline baseline-shift="super">
+       上付き
+</fo:inline>
+<fo:inline baseline-shift="sub">
+       下付き
+</fo:inline>]]>
+上の例は、次のように表示されます。
+
+
+文字の大きさ
+fo:inlineのfont-sizeプロパティに文字サイズを指定することで文字の大きさを変更することができます。
+
+次の例は、1文字ごとにfont-sizeの値を8、10、12、18、24、30、36、42、48ポイントに設定した例です。
+
+インラインFOによる文字の大きさの設定
+<![CDATA[ 
+<fo:block text-align="center">
+<fo:inline font-size="8pt">あ</fo:inline>
+<fo:inline font-size="10pt">あ</fo:inline>
+<fo:inline font-size="12pt">あ</fo:inline>
+<fo:inline font-size="18pt">あ</fo:inline>
+<fo:inline font-size="24pt">あ</fo:inline>
+<fo:inline font-size="30pt">あ</fo:inline>
+<fo:inline font-size="36pt">あ</fo:inline>
+<fo:inline font-size="42pt">あ</fo:inline>
+<fo:inline font-size="48pt">あ</fo:inline>
+</fo:block>]]>
+
+ルビの表現
+fo:inline-containerによるルビの表現
+<![CDATA[ 
+<fo:inline-container text-indent="0mm" 
+                     last-line-end-indent="0mm" 
+                     start-indent="0mm" 
+                     end-indent="0mm">
+       <fo:block font-size="0.5em" 
+                 text-align="center" 
+                 line-height="1.3" 
+                 space-before="-1.3em" 
+                 space-before.conditionality="retain" 
+                 wrap-option="no-wrap">
+                   じざいがん
+       </fo:block>
+       <fo:block text-align="center" 
+                 line-height="1" 
+                 wrap-option="no-wrap">
+                   自在眼
+       </fo:block>
+</fo:inline-container>]]>
+上の例は、次のように表示されます。
+
+
+脚注
+脚注は、脚注を付けたい文字の後ろにfo:footnoteを設定します。fo:footnote-bodyに脚注の本文を設定します。
+
+fo:footnoteとfo:footnote-bodyによる脚注の設定
+<![CDATA[ 
+<fo:block text-indent="1em" 
+          space-before="0.6em" 
+          space-after="0.6em" 
+          start-indent="10mm"
+          end-indent="10mm" 
+          text-align="
+          justify">
+       <fo:inline font-weight="bold">
+      「Extensible Markup Language」(XSL-FO）仕様
+              <fo:footnote>
+              <fo:inline baseline-shift="
+                         super" font-size="75%">
+              (1)
+              </fo:inline>
+                     <fo:footnote-body>
+                     <fo:block background-color="antiquewhite" 
+                               start-indent="10mm" 
+                               end-indent="10mm">
+                            <fo:inline baseline-shift="super" 
+                                       font-size="75%">
+                            (1)
+                            </fo:inline>
+                     XSLスタイルシートという言葉は、現在、非常に混乱して
+                     います。「Extensible Stylesheet Language」仕様は、当初、
+                     XSLT（変換言語）、XPATH（パス指定方法）と一緒に検討
+                     されていました。ところが、1999年4月にXSLT、XPATHが
+                     独立して別仕様になったこと。Internet Explorerが、独
+                     自仕様のXSLスタイルシートを使ってXMLをHTMLに変換し
+                     て表示するようになっているなどが原因です。
+                     </fo:block>
+                     </fo:footnote-body>
+              </fo:footnote>
+       は、このような要請に応えることができます。
+       </fo:inline>
+</fo:block>]]>
+
+索引や目次の作成方法
+索引や目次の項目にfo:page-number-citationを使ってページ番号を引用したり、リーダをつけることができます。
+
+ページ番号を入れたい箇所にfo:page-number-citationを置き、そのプロパティref-idに参照先項目のID番号を付けます。また、本文の中の該当項目には、fo:inline のプロパティとしてID番号を付けます。
+
+リーダはfo:leaderによって設定します。leaderとfo:page-number-citationが配置されるfo:blockにtext-align-lastjustifyを設定して置くことでページ番号を行末揃えし間をリーダで埋めることがでできます。
+
+fo:page-number-citationとfo:leaderの設定
+<![CDATA[ 
+<fo:block space-before="2em" 
+          start-indent="10mm" 
+          end-indent="10mm" 
+          text-align-last="justify">
+目次・索引に指定する項目
+       <fo:leader leader-pattern="dots"/>
+       <fo:page-number-citation ref-id="XYZ0211"/>
+</fo:block>]]>
+<![CDATA[ 
+<fo:block space-before="2em" 
+          start-indent="10mm" 
+          end-indent="10mm">
+本文・・・・・・・・・・・・・・・・・・
+</fo:block>
+<fo:block start-indent="10mm" 
+          end-indent="10mm">
+・・・・・・・・・・・・・・・・・・・・
+</fo:block>
+<fo:block start-indent="10mm" 
+          end-indent="10mm">
+・・・・
+       <fo:inline id="XYZ0211">
+       目次・索引に指定する項目
+       </fo:inline>・・・・
+</fo:block>
+<fo:block start-indent="10mm" 
+          end-indent="10mm">
+・・・・・・・・・・・・・・・・・・・・
+</fo:block>]]>
+上の例は、次のようにフォーマットされます。
+			<fo:inline>test</fo:inline>
+		</fo:block>
+	</fo:page-sequence>
+	
+</fo:root>

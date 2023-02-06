@@ -1,0 +1,1 @@
+java -jar ..\saxon-he-12.0.jar -s:test.xhtml -xsl:..\framexs3.xsl -o:out.xhtml skeleton_location=template.ftml

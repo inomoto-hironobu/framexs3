@@ -1,0 +1,19 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<script>
+var xsltProcessor = new XSLTProcessor();
+
+  // Load the xsl file using synchronous (third param is set to false) XMLHttpRequest
+  var myXMLHTTPRequest = new XMLHttpRequest();
+  myXMLHTTPRequest.open("GET", "example.xsl", false);
+  myXMLHTTPRequest.send(null);
+
+  var xslRef = myXMLHTTPRequest.responseXML;
+
+  // Finally import the .xsl
+  xsltProcessor.importStylesheet(xslRef);
+  xsltProcessor.transformToDocument(document);
+</script>
+</head>
+<body></body>
+</html>

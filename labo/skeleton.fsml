@@ -1,0 +1,52 @@
+<?xml version="1.0"?>
+<f:fsml xmlns:f="urn:framexs">
+<f:skeleton>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:f="urn:framexs" xmlns:yc="urn:yaohata-components" lang="ja">
+<head>
+<title><f:title/> - test</title>
+</head>
+<body>
+test
+<f:xpath value="string(//title)"/>
+
+<f:element name="div">
+<f:attribute name="class"></f:attribute>
+<div>test</div>
+</f:element>
+<f:if xpath="//meta[@name='description']/@content = '運営者の情報'">
+if
+</f:if>
+<f:switch xpath="">
+<f:case value="">
+
+</f:case>
+<f:default>
+
+</f:default>
+</f:switch>
+<div>
+<f:attribute name="class"></f:attribute>
+</div>
+<ul>
+<f:for>
+<li class="item"></li>
+</f:for>
+</ul>
+<f:test/>
+<ul>
+<f:table>
+<li>
+<f:row>
+<ul>
+<f:cell/>
+</ul>
+</f:row>
+</li>
+</f:table>
+</ul>
+
+
+</body>
+</html>
+</f:skeleton>
+</f:fsml>
